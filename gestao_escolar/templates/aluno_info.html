@@ -25,40 +25,40 @@
     <hr>
 
     <h2> Histórico de Saúde </h2>
-   <p> {{ aluno.historico_saude }}</p>
+    <p> {{ aluno.historico_saude }}</p>
     <hr>
-
 
     <!-- Tabela de Turmas -->
     <h2>Turmas</h2>
-
-    {% if aluno.turma %}
-        <table class="table table-striped">
-            <thead>
+    {% if aluno.turmas_aluno.exists %}
+    <table class="table table-striped">
+        <thead>
+            <tr>
+                <th>Nome da Turma</th>
+                <th>Ano</th>
+                <th>Professor(es)</th>
+                <th>Disciplinas</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for turma in aluno.turmas_aluno.all %}
                 <tr>
-                    <th>Nome da Turma</th>
-                    <th>Ano</th>
-                    <th>Professor(es)</th>
-                    <th>Disciplinas</th>
-                </tr>
-            </thead>
-            <tbody>
-                <tr>
-                    <td>{{ aluno.turma.nome_turma }}</td>
-                    <td>{{ aluno.turma.ano_turma }}</td>
+                    <td>{{ turma.nome_turma }}</td>
+                    <td>{{ turma.ano_turma }}</td>
                     <td>
-                        {% for professor in aluno.turma.professores.all %}
+                        {% for professor in turma.professores.all %}
                             {{ professor.nome }}{% if not forloop.last %}, {% endif %}
                         {% endfor %}
                     </td>
                     <td>
-                        {% for disciplina in aluno.turma.disciplinas.all %}
-                            {{ disciplina.nome }}{% if not forloop.last %}, {% endif %}
+                        {% for disciplina in turma.disciplinas.all %}
+                            {{ disciplina.nome_disciplina }}{% if not forloop.last %}, {% endif %}
                         {% endfor %}
                     </td>
                 </tr>
-            </tbody>
-        </table>
+            {% endfor %}
+        </tbody>
+    </table>
     {% else %}
         <p>O aluno não está matriculado em nenhuma turma.</p>
     {% endif %}
@@ -68,44 +68,52 @@
     <!-- Tabela de Atendimentos -->
     <h2>Histórico de Atendimentos</h2>
 
-    {% if aluno.atendimentos.exists %}
-    <table class="table table-striped">
-        <thead>
+{% if aluno.atendimentos_aluno.exists %}
+<table class="table table-striped">
+    <thead>
+        <tr>
+            <th>Data</th>
+            <th>Tipo do Atendimento</th>
+            <th>Responsável</th>
+            <th>Função</th>
+            <th>Ações</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for atendimento in aluno.atendimentos_aluno.all %}
             <tr>
-                <th>Data</th>
-                <th>Descrição</th>
-                <th>Responsável</th>
-                <th>Função</th> <!-- Nova coluna para a função -->
+                <td>{{ atendimento.data_atendimento }}</td>
+                <td>{{ atendimento.tipo_atendimento }}</td>
+                <td>
+                    {% if atendimento.responsavel_atendimento.nome_profissional %}
+                        {{ atendimento.responsavel_atendimento.nome_profissional }}
+                    {% else %}
+                        {{ atendimento.responsavel_atendimento.nome }}
+                    {% endif %}
+                </td>
+                <td>
+                    {% if atendimento.responsavel_atendimento.funcao %}
+                        {{ atendimento.responsavel_atendimento.funcao }}
+                    {% else %}
+                        Professor
+                    {% endif %}
+                </td>
+                <td>
+                    <a href="{% url 'atendimento_info' pk=aluno.pk atendimento_pk=atendimento.pk %}" class="btn btn-sm btn-info">Ver Atendimento</a>
+                    <a href="#" class="btn btn-sm btn-warning">Editar</a>
             </tr>
-        </thead>
-        <tbody>
-            {% for atendimento in aluno.atendimentos.all %}
-                <tr>
-                    <td>{{ atendimento.data_atendimento }}</td>
-                    <td>{{ atendimento.tipo_atendimento }}</td>
-                    <td>{{ atendimento.responsavel_atendimento }}</td>
-                    <td>
-                        {% if atendimento.responsavel_atendimento.funcao_responsavel %}
-                            {{ atendimento.responsavel_atendimento.funcao_responsavel }}
-                        {% else %}
-                            Professor
-                        {% endif %}
-                    </td> <!-- Exibe a função -->
-                </tr>
-            {% endfor %}
-        </tbody>
-    </table>
+        {% endfor %}
+    </tbody>
+</table>
 {% else %}
     <p>Nenhum atendimento registrado para este aluno.</p>
 {% endif %}
-
 <a href="{% url 'atendimento_create' aluno.pk %}" class="btn btn-primary">Criar Atendimento</a>
 
     <hr>
 
     <!-- Tabela de Anexos -->
     <h2>Anexos</h2>
-
     {% if anexos %}
         <table class="table table-striped">
             <thead>

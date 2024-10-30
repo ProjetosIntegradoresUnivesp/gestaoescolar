@@ -1,0 +1,42 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block page_title %}
+    Registro de Usuário
+{% endblock page_title %}
+
+{% block content %}
+    <h1>Registro de Usuário</h1>
+
+    <form method="post">
+        {% csrf_token %}
+
+        <div class="form-group mb-4">
+            <label for="username"><strong>Nome de Usuário</strong></label>
+            <input type="text" name="username" class="form-control" id="username" placeholder="Escolha um nome de usuário" value="{{ form.username.value|default:'' }}">
+            {% if form.username.errors %}
+                <div class="text-danger">{{ form.username.errors.0 }}</div>
+            {% endif %}
+        </div>
+
+        <div class="form-group mb-4">
+            <label for="email"><strong>Email</strong></label>
+            <input type="email" name="email" class="form-control" id="email" placeholder="Seu email cadastrado no sistema" value="{{ form.email.value|default:'' }}">
+            {% if form.email.errors %}
+                <div class="text-danger">{{ form.email.errors.0 }}</div>
+            {% endif %}
+        </div>
+
+        <div class="form-group mb-4">
+            <label for="password"><strong>Senha</strong></label>
+            <input type="password" name="password" class="form-control" id="password" placeholder="Crie uma senha">
+            {% if form.password.errors %}
+                <div class="text-danger">{{ form.password.errors.0 }}</div>
+            {% endif %}
+        </div>
+
+        <button type="submit" class="btn btn-primary">Registrar</button>
+        <a href="{% url 'login' %}" class="btn btn-secondary ml-2">Já possui uma conta? Entrar</a>
+    </form>
+{% endblock %}
+

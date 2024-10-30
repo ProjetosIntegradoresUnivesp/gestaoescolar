@@ -1,5 +1,9 @@
 from django.db import models
 from datetime import date
+from django.contrib.auth.models import User
+from django.contrib.contenttypes.models import ContentType
+from django.contrib.contenttypes.fields import GenericForeignKey
+
 
 # Definir as opções possiveis para os campos de seleção
 
@@ -130,6 +134,11 @@ class Turma(models.Model):
     disciplinas = models.ManyToManyField('Disciplina', related_name='turmas_disciplina')
     professores = models.ManyToManyField('Professor', related_name='turmas_professor', blank=True)  # Alterei o related_name aqui
 
+    def status(self):
+        if date.today().year == self.ano_turma:
+            return 'Ativa'
+        return 'Inativa'
+
     def atribuir_professores(self):
         professores = Professor.objects.filter(disciplinas__in=self.disciplinas.all()).distinct()
         self.professores.set(professores)
@@ -200,12 +209,15 @@ class AnexoAluno(models.Model):
 class Atendimento(models.Model):
     data_atendimento = models.DateField()
     tipo_atendimento = models.CharField(max_length=255)
-    aluno = models.ForeignKey(Aluno, on_delete=models.CASCADE, related_name='atendimentos_aluno')  # Removido null=True
-    responsavel_atendimento = models.ForeignKey(Equipe, on_delete=models.SET_NULL, null=True, related_name='responsavel_atendimento')
+    aluno = models.ForeignKey(Aluno, on_delete=models.CASCADE, related_name='atendimentos_aluno')
+    responsavel_content_type = models.ForeignKey(ContentType, on_delete=models.SET_NULL, null=True)
+    responsavel_object_id = models.PositiveIntegerField()
+    responsavel_atendimento = GenericForeignKey('responsavel_content_type', 'responsavel_object_id')
     descricao = models.TextField()
     tipo_documento = models.CharField(max_length=50, choices=TIPOS_DOCUMENTO_CHOICES, null=True, blank=True)
     anexos = models.FileField(upload_to='documentos/atendimentos/', null=True, blank=True)
     codigo_atendimento = models.CharField(max_length=6, unique=True, editable=False, blank=True)
+
 
     def save(self, *args, **kwargs):
         if not self.codigo_atendimento:
@@ -220,6 +232,16 @@ class Atendimento(models.Model):
 
     def __str__(self):
         return f"Atendimento {self.codigo_atendimento} - {self.tipo_atendimento}"
+
+# Anexo para Atendimentos
+
+class AnexoAtendimento(models.Model):
+    atendimento = models.ForeignKey(Atendimento, on_delete=models.CASCADE, related_name='anexos_atendimento')
+    arquivo = models.FileField(upload_to='documentos/atendimentos')
+    tipo_documento = models.CharField(max_length=50, choices=TIPOS_DOCUMENTO_CHOICES)
+
+    def __str__(self):
+        return f"{self.tipo_documento} - {self.arquivo.name}"
 
 # Modelos para disciplinas ----------------------------------------------
 
@@ -272,3 +294,16 @@ class Frequencia(models.Model):
     aluno = models.ForeignKey(Aluno, on_delete=models.CASCADE)
     data = models.DateField()
     presente = models.BooleanField()
+
+# Criar modelo para usuários ----------------------------------------------
+
+# Modelo para Usuários
+
+class PerfilUsuario(models.Model):
+    usuario = models.OneToOneField(User, on_delete=models.CASCADE)
+    professor = models.ForeignKey(Professor, on_delete=models.CASCADE, null=True, blank=True, related_name="perfil")
+    equipe = models.ForeignKey(Equipe, on_delete=models.CASCADE, null=True, blank=True, related_name="perfil")
+
+    def __str__(self):
+        return self.usuario.username
+

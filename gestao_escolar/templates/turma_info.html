@@ -28,8 +28,8 @@
             <tbody>
                 {% for aluno in turma.alunos.all %}
                     <tr>
-                        <td>{{ aluno.nome }}</td>
                         <td>{{ aluno.id_num }}</td>
+                        <td>{{ aluno.nome }}</td>
                         <td>{{ aluno.idade }} anos</td>
                     </tr>
                 {% endfor %}
@@ -42,25 +42,29 @@
     <hr>
 
     <!-- Tabela de Professores -->
-    <h2>Lista de Professores</h2>
+    <h2>Lista de Professores e Disciplinas</h2>
     {% if turma.professores.exists %}
         <table class="table table-striped">
             <thead>
                 <tr>
+                    <th>ID</th>
                     <th>Nome do Professor</th>
-                    <th>Disciplinas</th>
+                    <th>Código da Disciplina</th>
+                    <th>Nome da Disciplina</th>
                 </tr>
             </thead>
             <tbody>
                 {% for professor in turma.professores.all %}
-                    <tr>
-                        <td>{{ professor.nome }}</td>
-                        <td>
-                            {% for disciplina in professor.disciplinas_professor.all %}
-                                {{ disciplina.nome }}{% if not forloop.last %}, {% endif %}
-                            {% endfor %}
-                        </td>
-                    </tr>
+                    {% for disciplina in turma.disciplinas.all %}
+                        {% if disciplina.professor == professor %}
+                            <tr>
+                                <td>{{ professor.id_num }}</td>
+                                <td>{{ professor.nome }}</td>
+                                <td>{{ disciplina.codigo_disciplina }}</td>
+                                <td>{{ disciplina.nome_disciplina }}</td>
+                            </tr>
+                        {% endif %}
+                    {% endfor %}
                 {% endfor %}
             </tbody>
         </table>

@@ -1,48 +1,41 @@
-{% extends 'base.html' %}
+{% extends "base.html" %}
+{% load crispy_forms_tags %}
+
+{% block page_title %}
+    {% if atendimento.pk %}
+        Atualizar Atendimento
+    {% else %}
+        Criar Novo Atendimento
+    {% endif %}
+{% endblock page_title %}
 
 {% block content %}
-  <h2>Criar Novo Atendimento para {{ aluno.nome }}</h2>
+    <h2>
+        {% if atendimento.pk %}
+            Atualizar Atendimento {{ atendimento.codigo_atendimento }}
+        {% else %}
+            Criar Novo Atendimento para {{ aluno.nome }}
+        {% endif %}
+    </h2>
 
-  <form method="post" enctype="multipart/form-data">
-    {% csrf_token %}
-
-    <!-- Exibir mensagens de erro, caso existam -->
-    {% if form.non_field_errors %}
-      <div class="alert alert-danger">
-        {{ form.non_field_errors }}
-      </div>
+    {% if messages %}
+        {% for message in messages %}
+            <div class="alert {% if message.tags %}{{ message.tags }}{% endif %}">{{ message }}</div>
+        {% endfor %}
     {% endif %}
 
-    <!-- Campos do formulário -->
-    <div class="form-group">
-      <label for="id_data_atendimento">Data do Atendimento:</label>
-      {{ form.data_atendimento }}
-    </div>
+    <form method="POST">
+        {% csrf_token %}
+        {{ form.non_field_errors }}
+        {{ form|crispy }}
 
-    <div class="form-group">
-      <label for="id_tipo_atendimento">Tipo de Atendimento:</label>
-      {{ form.tipo_atendimento }}
-    </div>
+        <button type="submit" class="btn btn-primary">Salvar Atendimento</button>
 
-    <div class="form-group">
-      <label for="id_descricao">Descrição:</label>
-      {{ form.descricao }}
-    </div>
+        {% if atendimento.pk %}
+            <a href="{% url 'atendimento_info' pk=atendimento.aluno.pk atendimento_pk=atendimento.pk %}" class="btn btn-secondary">Cancelar</a>
+        {% else %}
+            <a href="{% url 'aluno_info' pk=aluno.pk %}" class="btn btn-secondary">Cancelar</a>
+        {% endif %}
+    </form>
+{% endblock content %}
 
-    <div class="form-group">
-      <label for="id_tipo_documento">Tipo de Documento:</label>
-      {{ form.tipo_documento }}
-    </div>
-
-    <div class="form-group">
-      <label for="id_anexos">Anexos:</label>
-      {{ form.anexos }}
-    </div>
-
-    <button type="submit" class="btn btn-primary">Salvar Atendimento</button>
-  </form>
-
-  <!-- Link para voltar à página de detalhes do aluno -->
-  <a href="{% url 'aluno_info' aluno.pk %}" class="btn btn-secondary">Voltar</a>
-
-{% endblock %}
