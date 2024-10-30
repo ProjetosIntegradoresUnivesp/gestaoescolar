@@ -11,7 +11,6 @@
         {% elif professor %} {{ professor.nome }}
         {% elif equipe %} {{ equipe.nome }}
         {% elif disciplina %} {{ disciplina.nome }}
-        {% elif atendimento%} {{ atendimento.codigo_atendimento }}
         {% endif %}
     </h1>
 
@@ -37,7 +36,6 @@
             {% elif professor %}{% url 'professor_info' professor.pk %}
             {% elif equipe %}{% url 'equipe_info' equipe.pk %}
             {% elif disciplina %}{% url 'disciplina_info' disciplina.pk %}
-            {% elif atendimento %}{% url 'atendimento_info' atendimento.aluno.pk atendimento.pk %}
             {% endif %}" class="btn btn-secondary">Cancelar</a>
     </form>
 

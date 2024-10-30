@@ -48,26 +48,29 @@
     <!-- Tabela de Turmas -->
     <h2>Turmas</h2>
 
-    {% with turmas_professor=professor.turmas_professor.all %}
-    {% if turmas_professor %}
+    {% if professor.turmas.all %}
         <table class="table table-striped">
             <thead>
                 <tr>
                     <th>Nome da Turma</th>
                     <th>Ano</th>
-                    <th>Disciplinas Lecionadas</th>
+                    <th>Professor(es)</th>
+                    <th>Disciplinas</th>
                 </tr>
             </thead>
             <tbody>
-                {% for turma in turmas_professor %}
+                {% for turma in professor.turmas.all %}
                     <tr>
                         <td>{{ turma.nome_turma }}</td>
                         <td>{{ turma.ano_turma }}</td>
                         <td>
+                            {% for professor in turma.professores.all %}
+                                {{ professor.nome }}{% if not forloop.last %}, {% endif %}
+                            {% endfor %}
+                        </td>
+                        <td>
                             {% for disciplina in turma.disciplinas.all %}
-                                {% if disciplina.professor == professor %}
-                                    {{ disciplina.nome_disciplina }}{% if not forloop.last %}, {% endif %}
-                                {% endif %}
+                                {{ disciplina.nome_disciplina }}{% if not forloop.last %}, {% endif %}
                             {% endfor %}
                         </td>
                     </tr>
@@ -77,7 +80,6 @@
     {% else %}
         <p>O professor não está cadastrado em nenhuma turma.</p>
     {% endif %}
-{% endwith %}
 
     <hr>
 

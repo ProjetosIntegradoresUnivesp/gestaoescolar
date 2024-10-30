@@ -29,7 +29,6 @@ INSTALLED_APPS = [
     'django_select2',
     'crispy_forms',
     'crispy_bootstrap5',
-    'rolepermissions',
     'gestao_escolar.apps.GestaoEscolarConfig',
 ]
 
@@ -107,6 +106,7 @@ USE_I18N = True
 
 USE_TZ = True
 
+
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/5.1/howto/static-files/
 
@@ -137,12 +137,4 @@ STATICFILES_DIRS = [
 MEDIA_URL = '/media/'
 MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
 
-# Configurando permissoes de acesso
-# Permissões de acesso
 
-ROLEPERMISSIONS_MODULE = 'gestao_escolar.roles'
-
-
-LOGIN_URL = '/login/'
-
-LOGIN_REDIRECT_URL = '/'
