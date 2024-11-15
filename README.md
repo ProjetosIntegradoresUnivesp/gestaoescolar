@@ -38,7 +38,8 @@ O projeto teve como objetivo desenvolver uma Ferramenta Digital Web-Based para G
 * Node.js (utilizado para as APIs)
 
 # Estrtutura do projeto
-.
+
+``` bash
 ├── manage.py
 |── README.md
 ├── gestao_escolar/
@@ -76,6 +77,7 @@ O projeto teve como objetivo desenvolver uma Ferramenta Digital Web-Based para G
 |   ├── wsgi.py
 ├── .gitignore
 ├── .env
+```
 
 # Agradecimentos
 
