@@ -10,6 +10,7 @@ UNIVERSIDADE VIRTUAL DO ESTADO DE SÃO PAULO
 * [Diego Nespolon Bertazzoli](https://github.com/diegobertazzoli)
 * [Elson Atushi Kondo](https://github.com/EAKUNIVESP)
 * [Fabiana Santos Lima Sugamele](https://github.com/fabianasugamele)
+* [Gabriel Silva Nascimento]()
 * [Glauco Bernadino Coelho]()
 * [Luciana Lima Dos Santos](https://github.com/lucianalds11)
 * [Nelson Francisco Correa Netto](https://github.com/nelsoncorrea)
@@ -30,6 +31,8 @@ O projeto teve como objetivo desenvolver uma Ferramenta Digital Web-Based para G
 * Gerenciamento de documentos e anexos.
 * Sistema de criação e gerenciamento de usários com login e senha.
 * Acessibilida de software: Avatar de leitura de tela, contraste de cores e leitor de tela.
+* Cadastro de avaliações e notas.
+* Dashboard para visualização de indicadores da equipe e desempenho dos alunos.
 
 # Pré-requisitos para execução
 
@@ -81,4 +84,4 @@ O projeto teve como objetivo desenvolver uma Ferramenta Digital Web-Based para G
 
 # Agradecimentos
 
-Agradecemos ao orientador do projeto, Lucas Silva Pamio, pela orientação e apoio durante o desenvolvimento do projeto.
+Agradecemos ao orientadora do projeto, Keyla Morales de Lima Garcia, pela orientação e apoio durante o desenvolvimento do projeto.

@@ -77,7 +77,7 @@
             {% for turma in aluno.turmas_aluno.all %}
                 {% for disciplina in turma.disciplinas.all %}
                     {% media_final disciplina aluno as media_final %}
-                    <tr {% if media_final and media_final < 6 %}class="table-danger"{% endif %}>
+                    <tr {% if media_final and media_final < 5 %}class="table-danger"{% endif %}>
                         <td>{{ disciplina.nome_disciplina }}</td>
                         <td>{{ disciplina.codigo_disciplina }}</td>
                         <td>

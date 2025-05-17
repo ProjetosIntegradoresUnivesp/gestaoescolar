@@ -12,6 +12,7 @@ from gestao_escolar.views import TurmasListView, TurmaCreateView, TurmaInfoView,
 from gestao_escolar.views import AtendimentoCreateView, AtendimentoInfoView, AtendimentoUpdateView, AtendimentoAnexosView
 from gestao_escolar.views import CustomLoginView, registrar_usuario
 from gestao_escolar.views import AvaliacaoCreateView, NotaAvaliacaoUpdateView
+from gestao_escolar.views import DashboardView, DashboardDataAPIView
 
 urlpatterns = [
     path('admin/', admin.site.urls),
@@ -50,4 +51,6 @@ urlpatterns = [
     path("registrar/", registrar_usuario, name="registrar_usuario"),
     path('disciplinas/<int:disciplina_pk>/avaliacoes/create/', AvaliacaoCreateView.as_view(), name='avaliacao_create'),
     path('avaliacoes/<int:avaliacao_pk>/notas/', NotaAvaliacaoUpdateView.as_view(), name='nota_avaliacao_update'),
+    path('dashboard/', DashboardView.as_view(), name='dashboard'),
+    path('dashboard-data/', DashboardDataAPIView.as_view(), name='dashboard_data'),
 ]+ static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT) # para servir arquivos de mídia durante o desenvolvimento
