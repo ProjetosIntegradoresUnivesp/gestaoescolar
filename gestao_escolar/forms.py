@@ -3,7 +3,7 @@ from django import forms
 from django.contrib.auth.models import User
 from django_select2.forms import Select2MultipleWidget
 from django.core.exceptions import ValidationError
-from .models import Turma, Aluno, Disciplina, PerfilUsuario, Professor, Equipe, Avaliacao, NotaAvaliacao
+from .models import Turma, Aluno, Disciplina, PerfilUsuario, Professor, Equipe
 
 class AnexoForm(forms.Form):
     tipo_documento = forms.ChoiceField(choices=[])
@@ -69,35 +69,3 @@ class RegistroUsuarioForm(forms.ModelForm):
                 perfil.equipe = Equipe.objects.get(email=user.email)
             perfil.save()
         return user
-
-# Formulários para registros de avaliações e notas ----------------------------
-
-class AvaliacaoForm(forms.ModelForm):
-    class Meta:
-        model = Avaliacao
-        fields = ['tipo', 'bimestre', 'data']
-        widgets = {
-            'data': forms.DateInput(attrs={'type': 'date', 'class': 'form-control'})
-        }
-
-    def __init__(self, *args, **kwargs):
-        self.disciplina = kwargs.pop('disciplina', None)
-        super().__init__(*args, **kwargs)
-
-    def save(self, commit=True):
-        avaliacao = super().save(commit=False)
-        avaliacao.disciplina = self.disciplina
-        if commit:
-            avaliacao.save()
-        return avaliacao
-
-class NotaAvaliacaoForm(forms.ModelForm):
-    class Meta:
-        model = NotaAvaliacao
-        fields = ['nota']
-
-NotaAvaliacaoFormSet = forms.modelformset_factory(
-    NotaAvaliacao,
-    form=NotaAvaliacaoForm,
-    extra=0
-)

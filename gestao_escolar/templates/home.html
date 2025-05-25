@@ -10,8 +10,8 @@
     <div class="my-5"></div>
 
     <div class="container">
-      <div class="row justify-content-center">
-        <!-- Botões de Equipe, Professores e Alunos -->
+      <div class="row justify-content-center mb-4">
+        <!-- Botões de Equipe, Professores e Alunos (ocupando a mesma largura) -->
         <div class="col-12 col-md-4 mb-2">
           <button class="btn btn-primary w-100 p-4" style="height: 120px;" onclick="window.location.href='{% url "equipe_list" %}'">
             <i class="bi bi-people-fill" style="font-size: 2rem;"></i><br>Equipe
@@ -27,7 +27,10 @@
             <i class="bi bi-person-lines-fill" style="font-size: 2rem;"></i><br>Alunos
           </button>
         </div>
-        <!-- Botões de Turmas, Disciplinas e Dashboard -->
+      </div>
+
+      <div class="row justify-content-center">
+        <!-- Botões de Turmas e Disciplinas (ocupando a mesma largura dos de cima) -->
         <div class="col-12 col-md-4 mb-2">
           <button class="btn btn-primary w-100 p-4" style="height: 120px;" onclick="window.location.href='{% url "turmas_list" %}'">
             <i class="bi bi-journal" style="font-size: 2rem;"></i><br>Turmas
@@ -38,11 +41,7 @@
             <i class="bi bi-book-fill" style="font-size: 2rem;"></i><br>Disciplinas
           </button>
         </div>
-        <div class="col-12 col-md-4 mb-2">
-          <button class="btn btn-primary w-100 p-4" style="height: 120px;" onclick="window.location.href='{% url "dashboard" %}'">
-            <i class="bi bi-speedometer2" style="font-size: 2rem;"></i><br>Dashboard
-          </button>
-        </div>
       </div>
     </div>
+  </div>
 {% endblock content %}
