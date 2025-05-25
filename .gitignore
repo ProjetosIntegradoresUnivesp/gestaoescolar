@@ -6,3 +6,4 @@ gestao_escolar/__pycache__/*
 gestao_escolar/migrations/__pycache__/*
 setup/__pycache__/*
 gestao_escolar/templatetags/__pycache__/*
+media/documentos/alunos/documento_teste*.txt
