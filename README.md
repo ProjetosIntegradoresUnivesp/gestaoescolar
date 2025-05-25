@@ -56,8 +56,6 @@ O projeto teve como objetivo desenvolver uma Ferramenta Digital Web-Based para G
 * Gerenciamento de documentos e anexos.
 * Sistema de criação e gerenciamento de usários com login e senha.
 * Acessibilida de software: Avatar de leitura de tela, contraste de cores e leitor de tela.
-* Cadastro de avaliações e notas.
-* Dashboard para visualização de indicadores da equipe e desempenho dos alunos.
 
 # Pré-requisitos para execução
 
