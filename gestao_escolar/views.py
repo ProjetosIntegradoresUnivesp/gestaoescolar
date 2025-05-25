@@ -12,6 +12,9 @@ from rolepermissions.permissions import revoke_permission
 from django.contrib.contenttypes.models import ContentType
 from .models import Aluno, AnexoAluno, Professor, AnexoProfessor, Equipe, AnexoEquipe, Disciplina, Atendimento, AnexoAtendimento, AnexoDisciplina, Turma
 from .forms import AnexoForm, TurmaForm, RegistroUsuarioForm, PerfilUsuario
+from .models import Avaliacao, NotaAvaliacao, Disciplina
+from .forms import AvaliacaoForm, NotaAvaliacaoFormSet
+from .models import calcular_media_bimestre, calcular_media_final
 
 # View da home -----------------------------------------------------------------
 
@@ -171,10 +174,12 @@ class AlunoInfoView(LoginRequiredMixin, View):
         # Passa os anexos do aluno para o contexto
         anexos = aluno.anexos.all()
 
-        # Cria o contexto com aluno e anexos
+        # Cria o contexto com aluno, anexos e funções de cálculo
         context = {
             'aluno': aluno,
-            'anexos': anexos
+            'anexos': anexos,
+            'calcular_media_bimestre': calcular_media_bimestre,
+            'calcular_media_final': calcular_media_final,
         }
 
         return render(request, "aluno_info.html", context)
@@ -696,3 +701,56 @@ class CustomLoginView(LoginView):
 
     def get_success_url(self):
         return self.success_url
+
+# Views para notas e avaliações -----------------------------------------------
+
+class AvaliacaoCreateView(CreateView):
+    model = Avaliacao
+    form_class = AvaliacaoForm
+    template_name = 'avaliacao_form.html'
+
+    def dispatch(self, request, *args, **kwargs):
+        self.disciplina = get_object_or_404(Disciplina, pk=self.kwargs['disciplina_pk'])
+        return super().dispatch(request, *args, **kwargs)
+
+    def get_form_kwargs(self):
+        kwargs = super().get_form_kwargs()
+        kwargs['disciplina'] = self.disciplina
+        return kwargs
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['disciplina'] = self.disciplina
+        return context
+
+    def get_success_url(self):
+        return reverse('disciplina_info', kwargs={'pk': self.disciplina.pk})
+
+    def form_valid(self, form):
+        messages.success(self.request, "Avaliação criada e notas dos alunos geradas!")
+        return super().form_valid(form)
+
+class NotaAvaliacaoUpdateView(View):
+    template_name = 'nota_avaliacao_form.html'
+
+    def get(self, request, *args, **kwargs):
+        self.avaliacao = get_object_or_404(Avaliacao, pk=self.kwargs['avaliacao_pk'])
+        formset = NotaAvaliacaoFormSet(queryset=self.avaliacao.notas_avaliacao.all())
+        return render(request, self.template_name, {
+            'formset': formset,
+            'avaliacao': self.avaliacao
+        })
+
+    def post(self, request, *args, **kwargs):
+        self.avaliacao = get_object_or_404(Avaliacao, pk=self.kwargs['avaliacao_pk'])
+        formset = NotaAvaliacaoFormSet(request.POST, queryset=self.avaliacao.notas_avaliacao.all())
+
+        if formset.is_valid():
+            formset.save()  # SIMPLES, DIRETO
+            messages.success(request, "Notas salvas com sucesso!")
+            return redirect('disciplina_info', pk=self.avaliacao.disciplina.pk)
+
+        return render(request, self.template_name, {
+            'formset': formset,
+            'avaliacao': self.avaliacao
+        })

@@ -307,3 +307,64 @@ class PerfilUsuario(models.Model):
     def __str__(self):
         return self.usuario.username
 
+
+# Criar modelo para avaliações e notas -----------------------------------------
+BIMESTRES_CHOICES = [
+    (1, '1º Bimestre'),
+    (2, '2º Bimestre'),
+    (3, '3º Bimestre'),
+    (4, '4º Bimestre'),
+]
+
+TIPO_AVALIACAO_CHOICES = [
+    ('Prova', 'Prova'),
+    ('Seminário', 'Seminário'),
+    ('Outras Atividades', 'Outras Atividades'),
+]
+
+class Avaliacao(models.Model):
+    disciplina = models.ForeignKey('Disciplina', on_delete=models.CASCADE, related_name='avaliacoes')
+    tipo = models.CharField(max_length=50, choices=TIPO_AVALIACAO_CHOICES)
+    bimestre = models.IntegerField(choices=BIMESTRES_CHOICES)
+    data = models.DateField(null=True, blank=True)
+
+    def __str__(self):
+        return f"{self.tipo} - {self.disciplina.nome_disciplina} ({self.get_bimestre_display()})"
+
+    def save(self, *args, **kwargs):
+        super().save(*args, **kwargs)
+
+        # Criar notas para todos os alunos de todas as turmas da disciplina
+        turmas = self.disciplina.turmas_disciplina.all()
+        alunos = set()
+        for turma in turmas:
+            for aluno in turma.alunos.all():
+                alunos.add(aluno)
+
+        for aluno in alunos:
+            NotaAvaliacao.objects.get_or_create(avaliacao=self, aluno=aluno)
+
+class NotaAvaliacao(models.Model):
+    avaliacao = models.ForeignKey(Avaliacao, on_delete=models.CASCADE, related_name='notas_avaliacao')
+    aluno = models.ForeignKey('Aluno', on_delete=models.CASCADE)
+    nota = models.DecimalField(max_digits=5, decimal_places=2, null=True, blank=True)
+
+    def __str__(self):
+        return f"{self.aluno.nome} - {self.avaliacao.tipo}"
+
+def calcular_media_bimestre(disciplina, aluno, bimestre):
+    """Calcula a média do aluno no bimestre para a disciplina"""
+    avaliacoes_bimestre = disciplina.avaliacoes.filter(bimestre=bimestre)
+    notas = NotaAvaliacao.objects.filter(avaliacao__in=avaliacoes_bimestre, aluno=aluno)
+    notas_validas = [n.nota for n in notas if n.nota is not None]
+    if notas_validas:
+        return sum(notas_validas) / len(notas_validas)
+    return None
+
+def calcular_media_final(disciplina, aluno):
+    """Calcula a média final do aluno na disciplina"""
+    medias_bimestres = [calcular_media_bimestre(disciplina, aluno, b) for b in range(1, 5)]
+    medias_validas = [m for m in medias_bimestres if m is not None]
+    if medias_validas:
+        return sum(medias_validas) / len(medias_validas)
+    return None
