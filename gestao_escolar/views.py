@@ -10,11 +10,15 @@ from django.contrib.auth.models import User
 from rolepermissions.decorators import has_role_decorator, has_permission_decorator
 from rolepermissions.permissions import revoke_permission
 from django.contrib.contenttypes.models import ContentType
+from django.db.models import Avg, Count, Q
+from django.http import JsonResponse
 from .models import Aluno, AnexoAluno, Professor, AnexoProfessor, Equipe, AnexoEquipe, Disciplina, Atendimento, AnexoAtendimento, AnexoDisciplina, Turma
 from .forms import AnexoForm, TurmaForm, RegistroUsuarioForm, PerfilUsuario
 from .models import Avaliacao, NotaAvaliacao, Disciplina
 from .forms import AvaliacaoForm, NotaAvaliacaoFormSet
 from .models import calcular_media_bimestre, calcular_media_final
+from collections import defaultdict
+from django.db.models.functions import ExtractMonth
 
 # View da home -----------------------------------------------------------------
 
@@ -753,4 +757,154 @@ class NotaAvaliacaoUpdateView(View):
         return render(request, self.template_name, {
             'formset': formset,
             'avaliacao': self.avaliacao
+        })
+
+
+# View para o dashboard -------------------------------------------------------
+
+class DashboardView(LoginRequiredMixin, TemplateView):
+    template_name = 'dashboard.html'
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+
+        # Visão geral
+        context['num_funcionarios'] = Equipe.objects.count()
+        context['num_professores'] = Professor.objects.count()
+        context['num_alunos'] = Aluno.objects.count()
+        context['num_turmas'] = Turma.objects.count()
+
+        # Média de turmas por professor (correta agora)
+        professores = Professor.objects.annotate(num_turmas=Count('turmas_professor'))
+        total_professores = professores.count()
+        total_turmas = sum(professor.num_turmas for professor in professores)
+        media_turmas_por_professor = (total_turmas / total_professores) if total_professores else 0
+        context['media_turmas_por_professor'] = round(media_turmas_por_professor, 1)
+
+        # Médias dos bimestres
+        medias_bimestres = {}
+        for bimestre in range(1, 5):
+            media_bimestre = NotaAvaliacao.objects.filter(avaliacao__bimestre=bimestre).aggregate(avg_nota=Avg('nota'))['avg_nota']
+            medias_bimestres[bimestre] = round(media_bimestre, 2) if media_bimestre else None
+        context['medias_bimestres'] = medias_bimestres
+
+        media_final_geral = NotaAvaliacao.objects.aggregate(avg_nota=Avg('nota'))['avg_nota']
+        context['media_final_geral'] = round(media_final_geral, 2) if media_final_geral else None
+
+        # Professores por disciplina
+        professores_por_disciplina = (
+            Disciplina.objects
+            .values('nome_disciplina')
+            .annotate(num_professores=Count('professor', distinct=True))
+            .order_by('nome_disciplina')
+        )
+        context['professores_por_disciplina'] = professores_por_disciplina
+
+        # Médias de alunos
+        medias_alunos_disciplinas = (
+            NotaAvaliacao.objects
+            .values('aluno__id_num', 'aluno__nome', 'avaliacao__disciplina__codigo_disciplina', 'avaliacao__disciplina__nome_disciplina')
+            .annotate(media_aluno=Avg('nota'))
+            .order_by('aluno__nome')[:50]
+        )
+        context['medias_alunos_disciplinas'] = medias_alunos_disciplinas
+
+        # Filtros
+        context['turmas'] = Turma.objects.all().order_by('nome_turma')
+        context['disciplinas'] = Disciplina.objects.all().order_by('nome_disciplina')
+        context['alunos'] = Aluno.objects.all().order_by('nome')
+
+        return context
+
+class DashboardDataAPIView(LoginRequiredMixin, View):
+    def get(self, request, *args, **kwargs):
+        turma_id = request.GET.get('turma_id')
+        disciplina_id = request.GET.get('disciplina_id')
+        aluno_id = request.GET.get('aluno_id')
+
+        notas = NotaAvaliacao.objects.all()
+        atendimentos = Atendimento.objects.all()
+
+        if turma_id:
+            notas = notas.filter(aluno__turmas_aluno__id=turma_id)
+            atendimentos = atendimentos.filter(aluno__turmas_aluno__id=turma_id)
+        if disciplina_id:
+            notas = notas.filter(avaliacao__disciplina__id=disciplina_id)
+        if aluno_id:
+            notas = notas.filter(aluno__id=aluno_id)
+            atendimentos = atendimentos.filter(aluno__id=aluno_id)
+
+        tabela = (
+            notas
+            .values(
+                'aluno__id_num',
+                'aluno__nome',
+                'avaliacao__disciplina__codigo_disciplina',
+                'avaliacao__disciplina__nome_disciplina'
+            )
+            .annotate(media_aluno=Avg('nota'))
+        )
+
+        medias_bimestres = {}
+        for b in range(1, 5):
+            media = notas.filter(avaliacao__bimestre=b).aggregate(m=Avg('nota'))['m']
+            medias_bimestres[b] = round(media, 2) if media else 0
+
+        media_final = notas.aggregate(m=Avg('nota'))['m']
+        media_final = round(media_final, 2) if media_final else 0
+
+        disciplinas = (
+            notas.values('avaliacao__disciplina__nome_disciplina')
+            .annotate(
+                m1=Avg('nota', filter=Q(avaliacao__bimestre=1)),
+                m2=Avg('nota', filter=Q(avaliacao__bimestre=2)),
+                m3=Avg('nota', filter=Q(avaliacao__bimestre=3)),
+                m4=Avg('nota', filter=Q(avaliacao__bimestre=4)),
+                mf=Avg('nota')
+            )
+        )
+        disciplinas_data = [
+            {
+                'nome_disciplina': d['avaliacao__disciplina__nome_disciplina'],
+                'medias_bimestres': [
+                    round(d['m1'] or 0, 2),
+                    round(d['m2'] or 0, 2),
+                    round(d['m3'] or 0, 2),
+                    round(d['m4'] or 0, 2),
+                    round(d['mf'] or 0, 2)
+                ]
+            }
+            for d in disciplinas
+        ]
+
+        atendimentos_totais = (
+            atendimentos
+            .values('aluno__nome')
+            .annotate(total=Count('id'))
+            .order_by('-total')[:10]
+        )
+        atendimentos_totais_data = [
+            {'nome': item['aluno__nome'], 'total': item['total']}
+            for item in atendimentos_totais
+        ]
+
+        atendimentos_bimestre = defaultdict(int)
+        for at in atendimentos:
+            mes = at.data_atendimento.month
+            if mes in [1, 2, 3]:
+                atendimentos_bimestre[1] += 1
+            elif mes in [4, 5, 6]:
+                atendimentos_bimestre[2] += 1
+            elif mes in [7, 8, 9]:
+                atendimentos_bimestre[3] += 1
+            elif mes in [10, 11, 12]:
+                atendimentos_bimestre[4] += 1
+
+        return JsonResponse({
+            'tabela': list(tabela),
+            'medias_bimestres': medias_bimestres,
+            'media_final': media_final,
+            'disciplinas': disciplinas_data,
+            'atendimentos_totais': atendimentos_totais_data,
+            'atendimentos_bimestre': dict(atendimentos_bimestre),
         })
