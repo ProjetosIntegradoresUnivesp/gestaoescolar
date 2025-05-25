@@ -1,88 +1,134 @@
 {% extends "base.html" %}
 {% load static %}
+{% load aluno_extras %} {# Carrega os filtros que criamos #}
 
 {% block page_title %}
     Info. Aluno: {{ aluno.nome }}
 {% endblock page_title %}
 
 {% block content %}
-    <h1>Informações: {{ aluno.nome }}</h1>
+<h1>Informações: {{ aluno.nome }}</h1>
 
-    <p><strong>ID:</strong> {{ aluno.id_num }}</p>
-    <p><strong>Data de Nascimento:</strong> {{ aluno.data_nascimento }}</p>
-    <p><strong>Idade:</strong> {{ aluno.idade }} anos</p>
-    <p><strong>Sexo:</strong> {{ aluno.sexo }}</p>
-    <p><strong>CPF - aluno:</strong> {{ aluno.cpf }}</p>
-    <p><strong>RG - aluno:</strong> {{ aluno.rg }}</p>
-    <p><strong>Nome da mãe:</strong> {{ aluno.nome_mae }}</p>
-    <p><strong>CPF - mãe:</strong> {{ aluno.cpf_mae }}</p>
-    <p><strong>Nome do pai:</strong> {{ aluno.nome_pai }}</p>
-    <p><strong>CPF - pai:</strong> {{ aluno.cpf_pai }}</p>
-    <p><strong>e-mail:</strong> {{ aluno.email }}</p>
-    <p><strong>Telefone:</strong> {{ aluno.telefone }}</p>
-    <p><strong>Endereço:</strong> {{ aluno.endereco }}, {{ aluno.numero_residencia }}, {{ aluno.bairro }} - {{ aluno.cep_residencia }}</p>
+<p><strong>ID:</strong> {{ aluno.id_num }}</p>
+<p><strong>Data de Nascimento:</strong> {{ aluno.data_nascimento|date:"d/m/Y" }}</p>
+<p><strong>Idade:</strong> {{ aluno.idade }} anos</p>
+<p><strong>Sexo:</strong> {{ aluno.sexo }}</p>
+<p><strong>CPF - aluno:</strong> {{ aluno.cpf }}</p>
+<p><strong>RG - aluno:</strong> {{ aluno.rg }}</p>
+<p><strong>Nome da mãe:</strong> {{ aluno.nome_mae }}</p>
+<p><strong>CPF - mãe:</strong> {{ aluno.cpf_mae }}</p>
+<p><strong>Nome do pai:</strong> {{ aluno.nome_pai }}</p>
+<p><strong>CPF - pai:</strong> {{ aluno.cpf_pai }}</p>
+<p><strong>E-mail:</strong> {{ aluno.email }}</p>
+<p><strong>Telefone:</strong> {{ aluno.telefone }}</p>
+<p><strong>Endereço:</strong> {{ aluno.endereco }}, {{ aluno.numero_residencia }}, {{ aluno.bairro }} - {{ aluno.cep_residencia }}</p>
 
-    <hr>
+<hr>
 
-    <h2> Histórico de Saúde </h2>
-    <p> {{ aluno.historico_saude }}</p>
-    <hr>
+<h2>Histórico de Saúde</h2>
+<p>{{ aluno.historico_saude }}</p>
 
-    <!-- Tabela de Turmas -->
-    <h2>Turmas</h2>
-    {% if aluno.turmas_aluno.exists %}
+<hr>
+
+<!-- Tabela de Turmas -->
+<h2>Turmas</h2>
+
+{% if aluno.turmas_aluno.exists %}
     <table class="table table-striped">
         <thead>
             <tr>
                 <th>Nome da Turma</th>
                 <th>Ano</th>
-                <th>Professor(es)</th>
-                <th>Disciplinas</th>
             </tr>
         </thead>
         <tbody>
             {% for turma in aluno.turmas_aluno.all %}
-                <tr>
-                    <td>{{ turma.nome_turma }}</td>
-                    <td>{{ turma.ano_turma }}</td>
-                    <td>
-                        {% for professor in turma.professores.all %}
-                            {{ professor.nome }}{% if not forloop.last %}, {% endif %}
-                        {% endfor %}
-                    </td>
-                    <td>
-                        {% for disciplina in turma.disciplinas.all %}
-                            {{ disciplina.nome_disciplina }}{% if not forloop.last %}, {% endif %}
-                        {% endfor %}
-                    </td>
-                </tr>
+            <tr>
+                <td>{{ turma.nome_turma }}</td>
+                <td>{{ turma.ano_turma }}</td>
+            </tr>
             {% endfor %}
         </tbody>
     </table>
-    {% else %}
-        <p>O aluno não está matriculado em nenhuma turma.</p>
-    {% endif %}
+{% else %}
+    <p>O aluno não está matriculado em nenhuma turma.</p>
+{% endif %}
 
-    <hr>
+<hr>
 
-    <!-- Tabela de Atendimentos -->
-    <h2>Histórico de Atendimentos</h2>
+<!-- Nova Tabela: Médias das Disciplinas -->
+<h2>Médias Bimestrais e Média Final</h2>
+
+{% if aluno.turmas_aluno.exists %}
+    <table class="table table-striped">
+        <thead>
+            <tr>
+                <th>Disciplina</th>
+                <th>Código</th>
+                <th>Professor</th>
+                <th>1º Bimestre</th>
+                <th>2º Bimestre</th>
+                <th>3º Bimestre</th>
+                <th>4º Bimestre</th>
+                <th>Média Final</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for turma in aluno.turmas_aluno.all %}
+                {% for disciplina in turma.disciplinas.all %}
+                    {% media_final disciplina aluno as media_final %}
+                    <tr {% if media_final and media_final < 5 %}class="table-danger"{% endif %}>
+                        <td>{{ disciplina.nome_disciplina }}</td>
+                        <td>{{ disciplina.codigo_disciplina }}</td>
+                        <td>
+                            {% if disciplina.professor %}
+                                {{ disciplina.professor.nome }}
+                            {% else %}
+                                Sem professor
+                            {% endif %}
+                        </td>
+
+                        {% media_bimestre disciplina aluno 1 as media1 %}
+                        <td>{% if media1 %}{{ media1|floatformat:1 }}{% else %}-{% endif %}</td>
+
+                        {% media_bimestre disciplina aluno 2 as media2 %}
+                        <td>{% if media2 %}{{ media2|floatformat:1 }}{% else %}-{% endif %}</td>
+
+                        {% media_bimestre disciplina aluno 3 as media3 %}
+                        <td>{% if media3 %}{{ media3|floatformat:1 }}{% else %}-{% endif %}</td>
+
+                        {% media_bimestre disciplina aluno 4 as media4 %}
+                        <td>{% if media4 %}{{ media4|floatformat:1 }}{% else %}-{% endif %}</td>
+
+                        <td>{% if media_final %}{{ media_final|floatformat:1 }}{% else %}-{% endif %}</td>
+                    </tr>
+                {% endfor %}
+            {% endfor %}
+        </tbody>
+    </table>
+{% else %}
+    <p>O aluno não está matriculado em nenhuma disciplina.</p>
+{% endif %}
+<hr>
+
+<!-- Tabela de Atendimentos -->
+<h2>Histórico de Atendimentos</h2>
 
 {% if aluno.atendimentos_aluno.exists %}
-<table class="table table-striped">
-    <thead>
-        <tr>
-            <th>Data</th>
-            <th>Tipo do Atendimento</th>
-            <th>Responsável</th>
-            <th>Função</th>
-            <th>Ações</th>
-        </tr>
-    </thead>
-    <tbody>
-        {% for atendimento in aluno.atendimentos_aluno.all %}
+    <table class="table table-striped">
+        <thead>
             <tr>
-                <td>{{ atendimento.data_atendimento }}</td>
+                <th>Data</th>
+                <th>Tipo do Atendimento</th>
+                <th>Responsável</th>
+                <th>Função</th>
+                <th>Ações</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for atendimento in aluno.atendimentos_aluno.all %}
+            <tr>
+                <td>{{ atendimento.data_atendimento|date:"d/m/Y" }}</td>
                 <td>{{ atendimento.tipo_atendimento }}</td>
                 <td>
                     {% if atendimento.responsavel_atendimento.nome_profissional %}
@@ -101,44 +147,46 @@
                 <td>
                     <a href="{% url 'atendimento_info' pk=aluno.pk atendimento_pk=atendimento.pk %}" class="btn btn-sm btn-info">Ver Atendimento</a>
                     <a href="#" class="btn btn-sm btn-warning">Editar</a>
+                </td>
             </tr>
-        {% endfor %}
-    </tbody>
-</table>
+            {% endfor %}
+        </tbody>
+    </table>
 {% else %}
     <p>Nenhum atendimento registrado para este aluno.</p>
 {% endif %}
 <a href="{% url 'atendimento_create' aluno.pk %}" class="btn btn-primary">Criar Atendimento</a>
 
-    <hr>
+<hr>
 
-    <!-- Tabela de Anexos -->
-    <h2>Anexos</h2>
-    {% if anexos %}
-        <table class="table table-striped">
-            <thead>
-                <tr>
-                    <th>Tipo de Documento</th>
-                    <th>Arquivo</th>
-                    <th>Download</th>
-                </tr>
-            </thead>
-            <tbody>
-                {% for anexo in anexos %}
-                    <tr>
-                        <td>{{ anexo.tipo_documento }}</td>
-                        <td>{{ anexo.arquivo.name }}</td>
-                        <td><a href="{{ anexo.arquivo.url }}" download>Download</a></td>
-                    </tr>
-                {% endfor %}
-            </tbody>
-        </table>
-    {% else %}
-        <p>Nenhum anexo disponível para este aluno.</p>
-    {% endif %}
+<!-- Tabela de Anexos -->
+<h2>Anexos</h2>
 
-    <a href="{% url 'aluno_upload_anexos' aluno.pk %}" class="btn btn-primary">Atualizar Anexos</a>
-    <a href="{% url 'aluno_update' aluno.pk %}" class="btn btn-warning">Atualizar Cadastro</a>
-    <a href="{% url 'alunos_list' %}" class="btn btn-secondary">Voltar para a Lista de Alunos</a>
+{% if anexos %}
+    <table class="table table-striped">
+        <thead>
+            <tr>
+                <th>Tipo de Documento</th>
+                <th>Arquivo</th>
+                <th>Download</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for anexo in anexos %}
+            <tr>
+                <td>{{ anexo.tipo_documento }}</td>
+                <td>{{ anexo.arquivo.name }}</td>
+                <td><a href="{{ anexo.arquivo.url }}" download>Download</a></td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+{% else %}
+    <p>Nenhum anexo disponível para este aluno.</p>
+{% endif %}
+
+<a href="{% url 'aluno_upload_anexos' aluno.pk %}" class="btn btn-primary">Atualizar Anexos</a>
+<a href="{% url 'aluno_update' aluno.pk %}" class="btn btn-warning">Atualizar Cadastro</a>
+<a href="{% url 'alunos_list' %}" class="btn btn-secondary">Voltar para a Lista de Alunos</a>
 
 {% endblock %}

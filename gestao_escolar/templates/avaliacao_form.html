@@ -1,0 +1,20 @@
+{% extends 'base.html' %}
+{% load crispy_forms_tags %}
+{% load static %}
+
+{% block page_title %}
+    Cadastrar Avaliação
+{% endblock page_title %}
+
+{% block content %}
+<h1>Cadastrar Avaliação</h1>
+
+<form method="POST">
+    {% csrf_token %}
+    {{ form|crispy }}
+
+    <button type="submit" class="btn btn-primary">Salvar Avaliação</button>
+    <a href="{% url 'disciplina_info' disciplina.pk %}" class="btn btn-secondary">Cancelar</a>
+</form>
+{% endblock content %}
+

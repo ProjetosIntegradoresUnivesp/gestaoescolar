@@ -6,49 +6,87 @@
 {% endblock page_title %}
 
 {% block content %}
-    <h1>Informações: {{ disciplina.nome_disciplina }}</h1>
+<h1>Informações: {{ disciplina.nome_disciplina }}</h1>
 
-    <p><strong>Código:</strong> {{ disciplina.codigo_disciplina }}</p>
-    <p><strong>Série:</strong> {{ disciplina.serie }}</p>
-    <p><strong>Ano:</strong> {{ disciplina.ano_disciplina }}</p>
-    <p><strong>Professor:</strong>
-        {% if disciplina.professor %}
-            {{ disciplina.professor.nome }}
-        {% else %}
-            Não atribuído
-        {% endif %}
-    </p>
-
-    <hr>
-
-    <!-- Tabela de Anexos -->
-    <h2>Anexos</h2>
-
-    {% if anexos %}
-        <table class="table table-striped">
-            <thead>
-                <tr>
-                    <th>Tipo de Documento</th>
-                    <th>Arquivo</th>
-                    <th>Download</th>
-                </tr>
-            </thead>
-            <tbody>
-                {% for anexo in anexos %}
-                    <tr>
-                        <td>{{ anexo.tipo_documento }}</td>
-                        <td>{{ anexo.arquivo.name }}</td>
-                        <td><a href="{{ anexo.arquivo.url }}" download>Download</a></td>
-                    </tr>
-                {% endfor %}
-            </tbody>
-        </table>
+<p><strong>Código:</strong> {{ disciplina.codigo_disciplina }}</p>
+<p><strong>Série:</strong> {{ disciplina.serie }}</p>
+<p><strong>Ano:</strong> {{ disciplina.ano_disciplina }}</p>
+<p><strong>Professor:</strong>
+    {% if disciplina.professor %}
+        {{ disciplina.professor.nome }}
     {% else %}
-        <p>Nenhum anexo disponível para esta disciplina.</p>
+        Não atribuído
     {% endif %}
+</p>
 
-    <a href="{% url 'disciplina_upload_anexos' disciplina.pk %}" class="btn btn-primary">Atualizar Anexos</a>
-    <a href="{% url 'disciplina_update' disciplina.pk %}" class="btn btn-warning">Atualizar Disciplina</a>
-    <a href="{% url 'disciplinas_list' %}" class="btn btn-secondary">Voltar para a Lista de Disciplinas</a>
+<hr>
 
-{% endblock %}
+<h2>Anexos</h2>
+
+{% if anexos %}
+    <table class="table table-striped">
+        <thead>
+            <tr>
+                <th>Tipo de Documento</th>
+                <th>Arquivo</th>
+                <th>Download</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for anexo in anexos %}
+                <tr>
+                    <td>{{ anexo.tipo_documento }}</td>
+                    <td>{{ anexo.arquivo.name }}</td>
+                    <td><a href="{{ anexo.arquivo.url }}" download>Download</a></td>
+                </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+{% else %}
+    <p>Nenhum anexo disponível para esta disciplina.</p>
+{% endif %}
+
+<a href="{% url 'disciplina_upload_anexos' disciplina.pk %}" class="btn btn-primary">Atualizar Anexos</a>
+<a href="{% url 'disciplina_update' disciplina.pk %}" class="btn btn-warning">Atualizar Disciplina</a>
+<a href="{% url 'disciplinas_list' %}" class="btn btn-secondary">Voltar para a Lista de Disciplinas</a>
+
+<hr>
+
+<h2>Avaliações</h2>
+<a href="{% url 'avaliacao_create' disciplina.pk %}" class="btn btn-success mb-3">Cadastrar Avaliação</a>
+
+{% for bimestre in "1234" %}
+    <h3>{{ bimestre }}º Bimestre</h3>
+    {% with avaliacoes=disciplina.avaliacoes.all|dictsort:"data" %}
+        {% if avaliacoes %}
+            <table class="table table-bordered">
+                <thead>
+                    <tr>
+                        <th>Tipo</th>
+                        <th>Data</th>
+                        <th>Ações</th>
+                    </tr>
+                </thead>
+                <tbody>
+                {% for avaliacao in disciplina.avaliacoes.all %}
+                    {% if avaliacao.bimestre|stringformat:"s" == bimestre %}
+                        <tr>
+                            <td>{{ avaliacao.tipo }}</td>
+                            <td>{{ avaliacao.data|date:"d/m/Y" }}</td>
+                            <td>
+                                <a href="{% url 'nota_avaliacao_update' avaliacao.pk %}" class="btn btn-outline-primary btn-sm">Lançar Notas</a>
+                            </td>
+                        </tr>
+                    {% endif %}
+                {% endfor %}
+                </tbody>
+            </table>
+        {% else %}
+            <p>Nenhuma avaliação cadastrada para este bimestre.</p>
+        {% endif %}
+    {% endwith %}
+{% endfor %}
+
+{% endblock content %}
+
+
